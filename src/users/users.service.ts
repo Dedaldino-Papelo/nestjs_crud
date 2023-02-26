@@ -11,14 +11,19 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(createUserDto: CreateUserDto) {
-    const salt = bcrypt.genSaltSync();
-    const password = await bcrypt.hash(createUserDto.password, salt);
+    const createUser = new this.userModel(createUserDto)
+    const { email } = createUser
+    // Check if user exists
+    const user = await this.userModel.findOne({email})
 
-    const user = await this.userModel.create({
-      ...createUserDto,
-      password
-    })
-    return user.save();
+    if(user){
+     return "user already exists"
+
+    } else {
+      const salt = bcrypt.genSaltSync();
+      createUser.password = await bcrypt.hash(createUserDto.password, salt);
+      return createUser.save(); 
+    }
   }
 
   async findAll() {
