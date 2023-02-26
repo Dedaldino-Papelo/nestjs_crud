@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { Injectable } from '@nestjs/common';
+import { Injectable,NotFoundException,BadRequestException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -17,7 +17,7 @@ export class UsersService {
     const user = await this.userModel.findOne({email})
 
     if(user){
-     return "user already exists"
+     throw new BadRequestException("user already exists")
 
     } else {
       const salt = bcrypt.genSaltSync();
@@ -30,8 +30,13 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
-  findOne(id: string) {
-    return this.userModel.findById(id);
+  async findOne(id: string) {
+    const user = await this.userModel.findById(id);
+
+    if(!user){
+      throw new NotFoundException("user not found")
+    }
+    return user
   }
 
   update(id: string, updateUserDto: UpdateUserDto) {
